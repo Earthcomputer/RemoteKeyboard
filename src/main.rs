@@ -88,7 +88,7 @@ fn main() {
 }
 
 fn host(port: u16) {
-    let listener = match TcpListener::bind(("127.0.0.1", port)) {
+    let listener = match TcpListener::bind(("0.0.0.0", port)) {
         Ok(listener) => listener,
         Err(err) => {
             println!("{err}");
