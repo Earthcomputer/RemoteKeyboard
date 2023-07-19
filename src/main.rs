@@ -1,7 +1,7 @@
-use std::io::{Read, Write};
-use std::net::{IpAddr, TcpListener, TcpStream};
 use clap::{Parser, Subcommand};
 use enigo::{Enigo, KeyboardControllable};
+use std::io::{Read, Write};
+use std::net::{IpAddr, TcpListener, TcpStream};
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
@@ -129,7 +129,9 @@ fn read_char(mut read: impl Read) -> std::io::Result<char> {
     let mut value = [0];
     read.read_exact(&mut value)?;
     let value = value[0];
-    char::from_u32(value as u32).filter(char::is_ascii).ok_or_else(|| std::io::Error::new(std::io::ErrorKind::Other, "Received non-ascii char"))
+    char::from_u32(value as u32)
+        .filter(char::is_ascii)
+        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::Other, "Received non-ascii char"))
 }
 
 fn process_event(mut read: impl Read, enigo: &mut Enigo) -> std::io::Result<()> {
@@ -138,7 +140,10 @@ fn process_event(mut read: impl Read, enigo: &mut Enigo) -> std::io::Result<()> 
     let [state, mode] = value;
 
     if state != STATE_PRESSED && state != STATE_RELEASED {
-        return Err(std::io::Error::new(std::io::ErrorKind::Other, "State is not pressed or released"));
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "State is not pressed or released",
+        ));
     }
 
     use enigo::Key::*;
@@ -186,7 +191,12 @@ fn process_event(mut read: impl Read, enigo: &mut Enigo) -> std::io::Result<()> 
         MODE_RETURN => Return,
         MODE_SPACE => Space,
         MODE_TAB => Tab,
-        _ => return Err(std::io::Error::new(std::io::ErrorKind::Other, "Invalid mode")),
+        _ => {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Invalid mode",
+            ))
+        }
     };
 
     if state == STATE_PRESSED {
@@ -200,7 +210,10 @@ fn process_event(mut read: impl Read, enigo: &mut Enigo) -> std::io::Result<()> 
 
 fn connect(ip: IpAddr, port: u16) {
     let event_loop = EventLoop::new();
-    let window = WindowBuilder::new().with_title("RemoteKeyboard").build(&event_loop).unwrap();
+    let window = WindowBuilder::new()
+        .with_title("RemoteKeyboard")
+        .build(&event_loop)
+        .unwrap();
 
     println!("Connecting to {ip}:{port}");
 
@@ -223,34 +236,43 @@ fn connect(ip: IpAddr, port: u16) {
                 window_id,
             } if window_id == window.id() => *control_flow = ControlFlow::Exit,
             Event::WindowEvent {
-                event: WindowEvent::KeyboardInput {
-                    input: KeyboardInput {
-                        virtual_keycode: Some(code),
-                        state,
+                event:
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                virtual_keycode: Some(code),
+                                state,
+                                ..
+                            },
                         ..
                     },
-                    ..
-                },
-                window_id
+                window_id,
             } if window_id == window.id() => {
                 if let Err(err) = write_event(&mut stream, code, state) {
                     println!("{err}");
                     *control_flow = ControlFlow::Exit;
                 }
             }
-            _ => {},
+            _ => {}
         }
     });
 }
 
 fn write_char(mut write: impl Write, value: char) -> std::io::Result<()> {
     if !value.is_ascii() {
-        return Err(std::io::Error::new(std::io::ErrorKind::Other, "Cannot send non-ascii character"));
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Cannot send non-ascii character",
+        ));
     }
     write.write_all(&[value as u8])
 }
 
-fn write_event(mut write: impl Write, code: VirtualKeyCode, state: ElementState) -> std::io::Result<()> {
+fn write_event(
+    mut write: impl Write,
+    code: VirtualKeyCode,
+    state: ElementState,
+) -> std::io::Result<()> {
     let (mode, char) = match code {
         VirtualKeyCode::Key1 => (MODE_CHAR, '1'),
         VirtualKeyCode::Key2 => (MODE_CHAR, '2'),
