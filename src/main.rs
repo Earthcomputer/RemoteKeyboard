@@ -99,6 +99,9 @@ fn host(port: u16) {
     println!("Listening on port {port}...");
 
     let stream = listener.incoming().next().unwrap();
+
+    println!("Received client");
+
     let mut stream = match stream {
         Ok(stream) => stream,
         Err(err) => {
