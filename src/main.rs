@@ -199,6 +199,8 @@ fn connect(ip: IpAddr, port: u16) {
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().with_title("RemoteKeyboard").build(&event_loop).unwrap();
 
+    println!("Connecting to {ip}:{port}");
+
     let mut stream = match TcpStream::connect((ip, port)) {
         Ok(stream) => stream,
         Err(err) => {
